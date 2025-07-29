@@ -65,6 +65,22 @@ contract FactoryTest is Test {
         assertEq(calculatedAddress, realAddress);
     }
 
+    function testCorrectFee() public {
+        factory = new UniswapV3Factory();
+
+        address pool = factory.createPool(address(tokenA), address(tokenB), 500);
+
+        uint24 fee = UniswapV3Pool(pool).fee();
+        int24 tickSpacing = UniswapV3Pool(pool).tickSpacing();
+
+        uint128 maxLiquidityPerTick = UniswapV3Pool(pool).maxLiquidityPerTick();
+        
+        assertEq(fee,500);
+        assertEq(tickSpacing, 10);
+        // write a test to check maxLiquidityPerTick
+
+    }
+
     
 
 }
