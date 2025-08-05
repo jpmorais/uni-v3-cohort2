@@ -81,6 +81,18 @@ contract FactoryTest is Test {
 
     }
 
+    function testInitializePool() public {
+        factory = new UniswapV3Factory();
+        pool = UniswapV3Pool(factory.createPool(address(tokenA), address(tokenB), 500));
+
+        uint160 initialPrice = 2**96; 
+        
+        pool.initialize(initialPrice);
+        (,int24 tick,,) = pool.slot0();
+        assertEq(tick, 0);
+
+    }
+
     
 
 }
