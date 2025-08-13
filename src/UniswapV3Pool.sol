@@ -5,11 +5,29 @@ import {IUniswapV3PoolDeployer} from "./interfaces/IUniswapV3PoolDeployer.sol";
 import {Tick} from "./libraries/Tick.sol";
 import {TickMath} from "./libraries/TickMath.sol";
 import {Position} from "./libraries/Position.sol";
+import {IERC20Minimal} from './interfaces/IERC20Minimal.sol';
+import {IUniswapV3MintCallback} from './interfaces/callback/IUniswapV3MintCallback.sol';
+import {SafeCast} from "./libraries/SafeCast.sol";
+import {LowGasSafeMath} from "./libraries/LowGasSafeMath.sol";
 
 
 contract UniswapV3Pool {
+
+    // Declare we are going to use a library in some type
+    using LowGasSafeMath for int256;
+   using LowGasSafeMath for uint256;
+
     
     event Initialize(uint160 sqrtPriceX96, int24 tick);
+    event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     address public immutable factory;
     address public immutable token0;
@@ -72,6 +90,82 @@ contract UniswapV3Pool {
 
         // Emit an event
         emit Initialize(sqrtPriceX96, tick);
+    }
+
+   function mint(
+        address recipient,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amount,
+        bytes calldata data
+    ) external returns (uint256 amount0, uint256 amount1) {
+
+        // This function will calculate how many tokens0 and/or tokens1
+        // the user should transfer
+        require(amount > 0);
+        (, int256 amount0Int, int256 amount1Int) =
+            _modifyPosition(
+                ModifyPositionParams({
+                    owner: recipient,
+                    tickLower: tickLower,
+                    tickUpper: tickUpper,
+                    liquidityDelta: int128(amount)
+                })
+            );
+
+        amount0 = uint256(amount0Int);
+        amount1 = uint256(amount1Int);
+
+        uint256 balance0Before;
+        uint256 balance1Before;
+        if (amount0 > 0) balance0Before = balance0();
+        if (amount1 > 0) balance1Before = balance1();
+        IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(amount0, amount1, data);
+        if (amount0 > 0) require(balance0Before.add(amount0) <= balance0(), 'M0');
+        if (amount1 > 0) require(balance1Before.add(amount1) <= balance1(), 'M1');
+
+        emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
+
+    }
+
+        struct ModifyPositionParams {
+        // the address that owns the position
+        address owner;
+        // the lower and upper tick of the position
+        int24 tickLower;
+        int24 tickUpper;
+        // any change in liquidity
+        int128 liquidityDelta;
+    }
+
+    function _modifyPosition(ModifyPositionParams memory params)
+        private
+        returns (
+            Position.Info storage position,
+            int256 amount0,
+            int256 amount1
+        )
+    {
+
+
+        return (positions[0x00],100,100);
+    }
+
+ function balance0() private view returns (uint256) {
+        (bool success, bytes memory data) =
+            token0.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
+    }
+
+    /// @dev Get the pool's balance of token1
+    /// @dev This function is gas optimized to avoid a redundant extcodesize check in addition to the returndatasize
+    /// check
+    function balance1() private view returns (uint256) {
+        (bool success, bytes memory data) =
+            token1.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 
 }
