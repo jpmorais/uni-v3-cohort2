@@ -9,6 +9,7 @@ import {IERC20Minimal} from './interfaces/IERC20Minimal.sol';
 import {IUniswapV3MintCallback} from './interfaces/callback/IUniswapV3MintCallback.sol';
 import {SafeCast} from "./libraries/SafeCast.sol";
 import {LowGasSafeMath} from "./libraries/LowGasSafeMath.sol";
+import {SqrtPriceMath} from "./libraries/SqrtPriceMath.sol";
 
 
 contract UniswapV3Pool {
@@ -147,6 +148,47 @@ contract UniswapV3Pool {
         )
     {
 
+        checkTicks(params.tickLower, params.tickUpper);
+
+        Slot0 memory _slot0 = slot0;
+ 
+        // Calculate the amount0 and amount1
+        if (params.liquidityDelta != 0) {
+            // 3 cases
+            // 1 current tick below lower tick
+            if (_slot0.tick < params.tickLower) {
+                // calculate amount0
+                amount0 = SqrtPriceMath.getAmount0Delta(
+                    TickMath.getSqrtRatioAtTick(params.tickLower), 
+                    TickMath.getSqrtRatioAtTick(params.tickUpper),
+                    params.liquidityDelta);
+            } else if (_slot0.tick < params.tickUpper) {
+                // calculate amount0
+                amount0 = SqrtPriceMath.getAmount0Delta(
+                    TickMath.getSqrtRatioAtTick(_slot0.tick), 
+                    TickMath.getSqrtRatioAtTick(params.tickUpper),
+                    params.liquidityDelta);
+                // calculate amount1
+                amount1 = SqrtPriceMath.getAmount1Delta(
+                    TickMath.getSqrtRatioAtTick(params.tickLower), 
+                    TickMath.getSqrtRatioAtTick(_slot0.tick),
+                    params.liquidityDelta);
+                // update liquidity
+                
+            } else {
+                // calculate amount1
+                    amount1 = SqrtPriceMath.getAmount1Delta(
+                    TickMath.getSqrtRatioAtTick(params.tickLower), 
+                    TickMath.getSqrtRatioAtTick(params.tickUpper),
+                    params.liquidityDelta);
+
+            }
+        }
+
+        // Update the position, ticks
+        // The protocol will call a function named _updatePosition
+
+
 
         return (positions[0x00],100,100);
     }
@@ -166,6 +208,12 @@ contract UniswapV3Pool {
             token1.staticcall(abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, address(this)));
         require(success && data.length >= 32);
         return abi.decode(data, (uint256));
+    }
+
+   function checkTicks(int24 tickLower, int24 tickUpper) private pure {
+        require(tickLower < tickUpper, 'TLU');
+        require(tickLower >= TickMath.MIN_TICK, 'TLM');
+        require(tickUpper <= TickMath.MAX_TICK, 'TUM');
     }
 
 }
