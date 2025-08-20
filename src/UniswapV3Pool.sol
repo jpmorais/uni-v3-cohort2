@@ -10,6 +10,9 @@ import {IUniswapV3MintCallback} from './interfaces/callback/IUniswapV3MintCallba
 import {SafeCast} from "./libraries/SafeCast.sol";
 import {LowGasSafeMath} from "./libraries/LowGasSafeMath.sol";
 import {SqrtPriceMath} from "./libraries/SqrtPriceMath.sol";
+import {LiquidityMath} from "./libraries/LiquidityMath.sol";
+
+import "forge-std/Test.sol";
 
 
 contract UniswapV3Pool {
@@ -17,6 +20,8 @@ contract UniswapV3Pool {
     // Declare we are going to use a library in some type
     using LowGasSafeMath for int256;
    using LowGasSafeMath for uint256;
+   using Position for mapping(bytes32 => Position.Info);
+   using Position for Position.Info;
 
     
     event Initialize(uint160 sqrtPriceX96, int24 tick);
@@ -122,6 +127,7 @@ contract UniswapV3Pool {
         if (amount0 > 0) balance0Before = balance0();
         if (amount1 > 0) balance1Before = balance1();
         IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(amount0, amount1, data);
+
         if (amount0 > 0) require(balance0Before.add(amount0) <= balance0(), 'M0');
         if (amount1 > 0) require(balance1Before.add(amount1) <= balance1(), 'M1');
 
@@ -149,8 +155,14 @@ contract UniswapV3Pool {
     {
 
         checkTicks(params.tickLower, params.tickUpper);
-
         Slot0 memory _slot0 = slot0;
+
+        position = _updatePosition(params.owner,
+            params.tickLower,
+            params.tickUpper,
+            params.liquidityDelta,
+            _slot0.tick);
+        
  
         // Calculate the amount0 and amount1
         if (params.liquidityDelta != 0) {
@@ -163,6 +175,10 @@ contract UniswapV3Pool {
                     TickMath.getSqrtRatioAtTick(params.tickUpper),
                     params.liquidityDelta);
             } else if (_slot0.tick < params.tickUpper) {
+
+                // retrieve the current liquidity
+                uint128 liquidityBefore = liquidity;   
+
                 // calculate amount0
                 amount0 = SqrtPriceMath.getAmount0Delta(
                     TickMath.getSqrtRatioAtTick(_slot0.tick), 
@@ -174,7 +190,8 @@ contract UniswapV3Pool {
                     TickMath.getSqrtRatioAtTick(_slot0.tick),
                     params.liquidityDelta);
                 // update liquidity
-                
+                liquidity = LiquidityMath.addDelta(liquidityBefore, params.liquidityDelta);
+
             } else {
                 // calculate amount1
                     amount1 = SqrtPriceMath.getAmount1Delta(
@@ -189,9 +206,20 @@ contract UniswapV3Pool {
         // The protocol will call a function named _updatePosition
 
 
-
-        return (positions[0x00],100,100);
     }
+
+function _updatePosition(
+        address owner,
+        int24 tickLower,
+        int24 tickUpper,
+        int128 liquidityDelta,
+        int24 tick
+    ) private returns (Position.Info storage position) {
+        position = positions.get(owner, tickLower, tickUpper);
+        position.update(liquidityDelta, 0, 0);
+        console.log(position.liquidity);
+    }
+
 
  function balance0() private view returns (uint256) {
         (bool success, bytes memory data) =

@@ -26,6 +26,7 @@ contract MintTest is Test, IUniswapV3MintCallback {
         (uint amount0, uint amount1) = pool.mint(address(this),-10,10,10**9,"");
         console.log(amount0);
         console.log(amount1);
+
     }
 
     function uniswapV3MintCallback(
@@ -34,8 +35,17 @@ contract MintTest is Test, IUniswapV3MintCallback {
         bytes calldata data
     ) external {
         require(msg.sender == address(pool));
-        tokenA.transfer(address(pool),amount0Owed);
-        tokenB.transfer(address(pool),amount1Owed);
+        (Token token0, Token token1) = address(tokenA) < address(tokenB) ? 
+            (tokenA, tokenB) :
+            (tokenB, tokenA);
+
+
+        if (amount0Owed > 0) {
+            token0.transfer(address(pool),amount0Owed);
+        } 
+        if (amount1Owed > 0) {
+            token1.transfer(address(pool),amount1Owed);
+        }
     }
 
     
