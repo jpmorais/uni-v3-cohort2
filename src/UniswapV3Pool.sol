@@ -22,6 +22,7 @@ contract UniswapV3Pool {
    using LowGasSafeMath for uint256;
    using Position for mapping(bytes32 => Position.Info);
    using Position for Position.Info;
+   using Tick for mapping(int24 => Tick.Info);
 
     
     event Initialize(uint160 sqrtPriceX96, int24 tick);
@@ -202,9 +203,6 @@ contract UniswapV3Pool {
             }
         }
 
-        // Update the position, ticks
-        // The protocol will call a function named _updatePosition
-
 
     }
 
@@ -215,9 +213,61 @@ function _updatePosition(
         int128 liquidityDelta,
         int24 tick
     ) private returns (Position.Info storage position) {
+
+
+        // updates the position
         position = positions.get(owner, tickLower, tickUpper);
         position.update(liquidityDelta, 0, 0);
-        console.log(position.liquidity);
+
+
+        // updates the ticks
+      // if we need to update the ticks, do it
+        bool flippedLower;
+        bool flippedUpper;
+        if (liquidityDelta != 0) {
+
+            flippedLower = ticks.update(
+                tickLower,
+                tick,
+                liquidityDelta,
+                0,
+                0,
+                0,
+                0,
+                0,
+                false,
+                maxLiquidityPerTick
+            );
+            flippedUpper = ticks.update(
+                tickUpper,
+                tick,
+                liquidityDelta,
+                0,
+                0,
+                0,
+                0,
+                0,
+                true,
+                maxLiquidityPerTick
+            );
+
+            if (flippedLower) {
+             //   tickBitmap.flipTick(tickLower, tickSpacing);
+            }
+            if (flippedUpper) {
+             //   tickBitmap.flipTick(tickUpper, tickSpacing);
+            }
+        }
+
+        if (liquidityDelta < 0) {
+            if (flippedLower) {
+                ticks.clear(tickLower);
+            }
+            if (flippedUpper) {
+                ticks.clear(tickUpper);
+            }
+        }
+
     }
 
 
