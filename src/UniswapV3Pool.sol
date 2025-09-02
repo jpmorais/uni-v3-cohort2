@@ -11,6 +11,7 @@ import {SafeCast} from "./libraries/SafeCast.sol";
 import {LowGasSafeMath} from "./libraries/LowGasSafeMath.sol";
 import {SqrtPriceMath} from "./libraries/SqrtPriceMath.sol";
 import {LiquidityMath} from "./libraries/LiquidityMath.sol";
+import {TickBitmap} from "./libraries/TickBitmap.sol";
 
 import "forge-std/Test.sol";
 
@@ -23,6 +24,7 @@ contract UniswapV3Pool {
    using Position for mapping(bytes32 => Position.Info);
    using Position for Position.Info;
    using Tick for mapping(int24 => Tick.Info);
+   using TickBitmap for mapping(int16 => uint256);
 
     
     event Initialize(uint160 sqrtPriceX96, int24 tick);
@@ -206,6 +208,10 @@ contract UniswapV3Pool {
 
     }
 
+function checkNextInitializedTick(int24 tick, bool lte) public view returns (int24 next, bool initialized) {
+    (next, initialized) = tickBitmap.nextInitializedTickWithinOneWord(tick, tickSpacing, lte);   
+}
+
 function _updatePosition(
         address owner,
         int24 tickLower,
@@ -252,10 +258,10 @@ function _updatePosition(
             );
 
             if (flippedLower) {
-             //   tickBitmap.flipTick(tickLower, tickSpacing);
+             tickBitmap.flipTick(tickLower, tickSpacing);
             }
             if (flippedUpper) {
-             //   tickBitmap.flipTick(tickUpper, tickSpacing);
+             tickBitmap.flipTick(tickUpper, tickSpacing);
             }
         }
 
