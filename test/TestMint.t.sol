@@ -61,6 +61,15 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(initialized);
     }
 
+    function testAnotherMint() public {
+        uint160 initialPrice = 79228162514264337593543950336;
+        pool.initialize(initialPrice);
+
+        (uint amount0, uint amount1) = pool.mint(address(this),10,20,10**9,"");
+        console.log(amount0);
+        console.log(amount1);
+    }
+
 
 
 
