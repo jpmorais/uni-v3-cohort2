@@ -99,5 +99,7 @@ library SwapMath {
         // feeAmount = amountWithFees * feeTier
         // amountInWithFees * (1 - feeTier) = amountIn 
         // feeAmount = amountin * feeTier / (1 - feeTier)
+        // OR (alternative derivation)
+        // (A + fees) * (1 - feeTier) = A
      }
 }

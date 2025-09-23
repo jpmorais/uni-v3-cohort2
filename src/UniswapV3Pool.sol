@@ -286,6 +286,7 @@ struct SwapCache {
 
         slot0.unlocked = false;
 
+        // cache so we don't need to read from storage
         SwapCache memory cache =
             SwapCache({
                 liquidityStart: liquidity,
@@ -296,8 +297,10 @@ struct SwapCache {
                 computedLatestObservation: false
             });
 
+        // tokens in specified or tokens out
         bool exactInput = amountSpecified > 0;
 
+        // current state
         SwapState memory state =
             SwapState({
                 amountSpecifiedRemaining: amountSpecified,
@@ -311,12 +314,14 @@ struct SwapCache {
 
         // continue swapping as long as we haven't used the entire input/output and haven't reached the price limit
         while (state.amountSpecifiedRemaining != 0 && state.sqrtPriceX96 != sqrtPriceLimitX96) {
-            console.log("ITERATION");
+            console.log("---------ITERATION---------");
             StepComputations memory step;
 
+            // read current price, next price is updated in computeSwapStep()
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
-            (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
+            // get next initialized tick
+           (step.tickNext, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
                 state.tick,
                 tickSpacing,
                 zeroForOne
@@ -330,9 +335,12 @@ struct SwapCache {
             }
 
             // get the price for the next tick
+            // this is the target price for this iteration
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.tickNext);
 
             // compute values to swap to the target tick, price limit, or point where input/output amount is exhausted
+            // liquidity should be updated before next iteration
+            // amount specified remaining should be update before next iteration
             (state.sqrtPriceX96, step.amountIn, step.amountOut, step.feeAmount) = SwapMath.computeSwapStep(
                 state.sqrtPriceX96,
                 (zeroForOne ? step.sqrtPriceNextX96 < sqrtPriceLimitX96 : step.sqrtPriceNextX96 > sqrtPriceLimitX96)
@@ -347,6 +355,7 @@ struct SwapCache {
             console.log("FEE", step.feeAmount);
             console.log("NEXT PRICE", state.sqrtPriceX96);
 
+            // update amount specified remanining
             if (exactInput) {
                 state.amountSpecifiedRemaining -= (step.amountIn + step.feeAmount).toInt256();
                 state.amountCalculated = state.amountCalculated.sub(step.amountOut.toInt256());
@@ -367,6 +376,7 @@ struct SwapCache {
                 state.feeGrowthGlobalX128 += FullMath.mulDiv(step.feeAmount, FixedPoint128.Q128, state.liquidity);
 
             // shift tick if we reached the next price
+            // update liquidity
             if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
                 // if the tick is initialized, run the tick transition
                 if (step.initialized) {
@@ -387,6 +397,8 @@ struct SwapCache {
                     // safe because liquidityNet cannot be type(int128).min
                     if (zeroForOne) liquidityNet = -liquidityNet;
 
+                    // update liquidity
+                    // if price is increasing, we should add. Otherwise, subtract
                     state.liquidity = LiquidityMath.addDelta(state.liquidity, liquidityNet);
                 }
 
