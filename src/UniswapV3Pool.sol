@@ -344,6 +344,8 @@ struct SwapCache {
             );
             console.log("IN", step.amountIn);
             console.log("OUT", step.amountOut);
+            console.log("FEE", step.feeAmount);
+            console.log("NEXT PRICE", state.sqrtPriceX96);
 
             if (exactInput) {
                 state.amountSpecifiedRemaining -= (step.amountIn + step.feeAmount).toInt256();
