@@ -4,6 +4,9 @@ pragma solidity >=0.5.0;
 import './FullMath.sol';
 import './SqrtPriceMath.sol';
 
+import "forge-std/Test.sol";
+
+
 /// @title Computes the result of a swap within ticks
 /// @notice Contains methods for computing the result of a swap within a single tick price range, i.e., a single tick.
 library SwapMath {
@@ -34,7 +37,6 @@ library SwapMath {
             uint256 feeAmount
         )
     {
-        console.log("AMOUNT REMAINING", amountRemaining);
         bool zeroForOne = sqrtRatioCurrentX96 >= sqrtRatioTargetX96;
         bool exactIn = amountRemaining >= 0;
 
@@ -84,7 +86,6 @@ library SwapMath {
                 : SqrtPriceMath.getAmount0Delta(sqrtRatioCurrentX96, sqrtRatioNextX96, liquidity, false);
         }
 
-        console.log("AMOUNT IN", amountIn);
         // cap the output amount to not exceed the remaining output amount
         if (!exactIn && amountOut > uint256(-amountRemaining)) {
             amountOut = uint256(-amountRemaining);
@@ -96,10 +97,6 @@ library SwapMath {
         } else {
             feeAmount = FullMath.mulDivRoundingUp(amountIn, feePips, 1e6 - feePips);
         }
-        // feeAmount = amountWithFees * feeTier
-        // amountInWithFees * (1 - feeTier) = amountIn 
-        // feeAmount = amountin * feeTier / (1 - feeTier)
-        // OR (alternative derivation)
-        // (A + fees) * (1 - feeTier) = A
-     }
+        console.log("FEE AMOUNT", feeAmount);
+    }
 }

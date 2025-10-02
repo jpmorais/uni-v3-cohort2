@@ -42,11 +42,32 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0swap);
         console.log(amount1swap);
 
-        (uint160 sqrtPriceX96, int24 tick, , ) = pool.slot0();
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
         console.log(sqrtPriceX96);
         console.log(tick);
 
     }
+
+
+    function testSwapMultipleTwo() public {
+
+        (uint amount0A, uint amount1A) = pool.mint(address(this),-10,10,10**8,"");
+        (uint amount0B, uint amount1B) = pool.mint(address(this),10,20,2*10**8,"");
+        (uint amount0C, uint amount1C) = pool.mint(address(this),20,40,3*10**8,"");
+
+
+
+        // zero for one
+        (int amount0swap, int amount1swap) = pool.swap(address(this), false, -300_000, 79167784519130042428790663799, "");
+        console.log(amount0swap);
+        console.log(amount1swap);
+
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
+        console.log(sqrtPriceX96);
+        console.log(tick);
+
+    }
+
 
     function uniswapV3SwapCallback(
         int256 amount0Delta,

@@ -88,7 +88,7 @@ contract FactoryTest is Test {
         uint160 initialPrice = 2**96; 
         
         pool.initialize(initialPrice);
-        (,int24 tick,,) = pool.slot0();
+        (,int24 tick,,,,,) = pool.slot0();
         assertEq(tick, 0);
 
     }

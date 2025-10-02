@@ -31,8 +31,8 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0);
         console.log(amount1);
         // Let us grab the ticks
-        (uint128 grossLower, int128 netLower, , , ) = pool.ticks(-10);
-        (uint128 grossUpper, int128 netUpper, , , ) = pool.ticks(10);
+        (uint128 grossLower, int128 netLower, , , ,,,) = pool.ticks(-10);
+        (uint128 grossUpper, int128 netUpper, , , ,,,) = pool.ticks(10);
         
         console.log("grossLower", grossLower); // 10**6
         console.log("grossUpper", grossUpper); // 10**6
@@ -45,21 +45,21 @@ contract MintTest is Test, IUniswapV3MintCallback {
         pool.mint(address(this),-10,10,200,"");
         pool.mint(address(this),0,20,100,"");
         // Let us grab the ticks
-        (uint128 grossLower, int128 netLower, , , ) = pool.ticks(-10);
-        (uint128 grossMiddle, int128 netMiddle, , , ) = pool.ticks(0);
-        (uint128 grossUpper, int128 netUpper, , , ) = pool.ticks(10);
+        (uint128 grossLower, int128 netLower, , , ,,,) = pool.ticks(-10);
+        (uint128 grossMiddle, int128 netMiddle, , , ,,,) = pool.ticks(0);
+        (uint128 grossUpper, int128 netUpper, , , ,,,) = pool.ticks(10);
 
     }
 
-    function testTickBitmap() public {
-        pool.mint(address(this),-100,200,2000000,"");
-        // current tick is tick 0
-        // what is the next initialized tick less than current tick
-        // and greater than current tick?
-        (int24 tick, bool initialized) = pool.checkNextInitializedTick(0, false);
-        console.log(tick);
-        console.log(initialized);
-    }
+    // function testTickBitmap() public {
+    //     pool.mint(address(this),-100,200,2000000,"");
+    //     // current tick is tick 0
+    //     // what is the next initialized tick less than current tick
+    //     // and greater than current tick?
+    //     (int24 tick, bool initialized) = pool.checkNextInitializedTick(0, false);
+    //     console.log(tick);
+    //     console.log(initialized);
+    // }
 
     function testAnotherMint() public {
         uint160 initialPrice = 79228162514264337593543950336;

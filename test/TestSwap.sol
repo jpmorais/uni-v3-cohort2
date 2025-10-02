@@ -40,7 +40,7 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0swap);
         console.log(amount1swap);
 
-        (uint160 sqrtPriceX96, int24 tick, , ) = pool.slot0();
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
         console.log(sqrtPriceX96);
         console.log(tick);
 
@@ -56,7 +56,7 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0swap);
         console.log(amount1swap);
 
-        (uint160 sqrtPriceX96, int24 tick, , ) = pool.slot0();
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
         console.log(sqrtPriceX96);
         console.log(tick);
 
@@ -73,7 +73,7 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0swap);
         console.log(amount1swap);
 
-        (uint160 sqrtPriceX96, int24 tick, , ) = pool.slot0();
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
         console.log(sqrtPriceX96);
         console.log(tick);
 
@@ -89,7 +89,7 @@ contract MintTest is Test, IUniswapV3MintCallback {
         console.log(amount0swap);
         console.log(amount1swap);
 
-        (uint160 sqrtPriceX96, int24 tick, , ) = pool.slot0();
+        (uint160 sqrtPriceX96, int24 tick, , ,,,) = pool.slot0();
         console.log(sqrtPriceX96);
         console.log(tick);
 

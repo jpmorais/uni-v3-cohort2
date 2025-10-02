@@ -2,8 +2,6 @@
 pragma solidity >=0.5.0;
 
 import './BitMath.sol';
-import "forge-std/Test.sol";
-
 
 /// @title Packed tick initialized state library
 /// @notice Stores a packed mapping of tick index to its initialized state
@@ -29,7 +27,6 @@ library TickBitmap {
     ) internal {
         require(tick % tickSpacing == 0); // ensure that the tick is spaced
         (int16 wordPos, uint8 bitPos) = position(tick / tickSpacing);
-
         uint256 mask = 1 << bitPos;
         self[wordPos] ^= mask;
     }
@@ -56,7 +53,6 @@ library TickBitmap {
             // all the 1s at or to the right of the current bitPos
             uint256 mask = (1 << bitPos) - 1 + (1 << bitPos);
             uint256 masked = self[wordPos] & mask;
-
 
             // if there are no initialized ticks to the right of or at the current tick, return rightmost in the word
             initialized = masked != 0;
